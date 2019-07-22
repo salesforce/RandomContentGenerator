@@ -3,6 +3,13 @@ package com.salesforce.rcg;
 import com.salesforce.rcg.numbers.dice.DiceFactory;
 import com.salesforce.rcg.numbers.dice.DiceExpression;
 
+/**
+ * A command-line sample that takes a dice expression as arguments,
+ * parses it, and shows the generated dice expression.
+ * 
+ * @author mpreslermarshall
+ *
+ */
 public class FirstDieSample {
 
     public static String expression = "3d6";

@@ -14,8 +14,12 @@ grammar Dice;
 //
 // The top of the parse tree: various kinds of random-number expressions
 // This will be represented by the RandomNumericExpression interface
+// By adding EOF to the end of the syntax, that tells Antlr that I expect
+// to parse the entire input. Now I get errors output to the console when
+// there is extraneous input, but I don't know how to turn those into
+// runtime exceptions.
 expression 
-    : basicExpression
+    : basicExpression EOF
     ;
 
 // The concrete types of random number expressions. These are implementations of the RandomNumericExpression interface

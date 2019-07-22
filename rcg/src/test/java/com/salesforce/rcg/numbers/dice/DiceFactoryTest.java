@@ -7,6 +7,7 @@ import com.salesforce.rcg.numbers.dice.testutils.ExpectedDiceResult;
 
 /**
  * A table-driven test for the DiceFactory. 
+ * 
  * This contains a table of strings to pass in to the DiceFactory, along with 
  * a representation of the expected values that should result from parsing each
  * string. See <tt>TEST_VALUES</tt> for more details on how this works. 
@@ -26,7 +27,7 @@ public class DiceFactoryTest {
      *     of the dice expression. See <tt>ExpectedDiceResult</tt> for the syntax
      *     of this part.
      */
-    public static final String[] TEST_VALUES = {
+    public static final String[] GOOD_TEST_VALUES = {
         // Simple FRP expressions
         "d8/1,8,4.5,1d8",
         "3d6/3,18,10.5,3d6",
@@ -60,12 +61,24 @@ public class DiceFactoryTest {
         "1 - 6/1,6,3.5,1d6",
         "2-12/2,12,7," + DiceTestUtils.ANY_STRING_FORM,
         "0 - 9/0,9,4.5," + DiceTestUtils.ANY_STRING_FORM,
+        "2-9/2,9,5.5," + DiceTestUtils.ANY_STRING_FORM,
+        
+        // A range where min=max should produce a constant expression
+        "4-4/4,4,4," + DiceTestUtils.ANY_STRING_FORM,
+        
+        // If the range values are swapped (max first), they should get
+        // automatically un-swapped
+        "8-1/1,8,4.5,1d8",
+       
         
         // Min-max ranges with negative numbers
         "-3 - 7/-3,7,2," + DiceTestUtils.ANY_STRING_FORM,
-        "-4 - 4/-4,4,0," + DiceTestUtils.ANY_STRING_FORM,
-        
+        "-4 - 4/-4,4,0," + DiceTestUtils.ANY_STRING_FORM,  
     };
+    
+    /** Input string which will not parse correctly. Each of these should result in
+     * some sort of an exception.
+     */
     
     /**
      * Execute the table-driven test for the parser, testing that each
@@ -73,7 +86,7 @@ public class DiceFactoryTest {
      */
     @Test
     public void tableDrivenTest() {
-        for (String testValue: TEST_VALUES) {
+        for (String testValue: GOOD_TEST_VALUES) {
             String components[] = testValue.split("/");
             String source = components[0];
             ExpectedDiceResult expected = new ExpectedDiceResult(components[1]);
@@ -83,7 +96,7 @@ public class DiceFactoryTest {
             
             DiceTestUtils.testRolls(expression, source, expected);
         }
-        System.out.println("Table-driven dice factory test ran " + TEST_VALUES.length + " values.");
+        System.out.println("Table-driven dice factory test ran " + GOOD_TEST_VALUES.length + " values.");
     }
 
 }
