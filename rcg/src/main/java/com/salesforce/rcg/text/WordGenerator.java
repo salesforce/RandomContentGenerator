@@ -1,5 +1,7 @@
 package com.salesforce.rcg.text;
 
+import java.util.Random;
+
 /** A word generator creates random words based on some algorithm. The details
  * of the words it'll generate and the underlying algorithm are entirely up to
  * the implementation of the word generator.
@@ -16,6 +18,10 @@ public interface WordGenerator {
     public String generateWord();
     
     public String getName();
+    
+    public Random getRng();
+    
+    public WordGenerator setRng(Random rng);
     
     // TBD: what other metadata can word generators publish?
 }

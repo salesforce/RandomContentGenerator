@@ -1,0 +1,27 @@
+{
+    "description": "An example JSON file used to represent one or more word generators",
+    "generators", [
+        {
+            "name": "roadnames",
+            "weights": "defined-weights",
+            "wordlist": [
+                {"avenue": 60},
+                {"boulevard": 10},
+                {"court": 10},
+                {"drive": 80},
+                {"road": 75},
+                {"street": 100},
+                {"terrace": 5},
+                {"trail": 8},
+                {"way": 4}
+            ]
+        },
+        {
+            "name": "furniture",
+            "enabled": false,
+            "weights": "unweighted",
+            "word-filename": "furniture.csv"
+        }
+    ]
+}
+

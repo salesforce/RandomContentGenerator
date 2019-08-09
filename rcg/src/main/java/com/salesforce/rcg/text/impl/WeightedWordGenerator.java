@@ -5,12 +5,25 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class WeightedWordGenerator extends AbstractRandomWordGenerator {
+import com.salesforce.rcg.text.ExtensibleWordGenerator;
+
+public class WeightedWordGenerator 
+        extends AbstractRandomWordGenerator 
+        implements ExtensibleWordGenerator {
+    /** All of the words in this generator. */
     protected List<WeightedItem<String>> items = new ArrayList<>();
     
+    /** The total weight of all our items.
+     * This is lazy-evaluated - every call to generate a word will see if the
+     * weights need to be recompiled, and do so if needed.
+     */
     protected double totalWeight = 0.0;
     
     protected AtomicBoolean weightsCompiled = new AtomicBoolean(false);
+    
+    public WeightedWordGenerator() {
+        super("anonymous");
+    }
     
     public WeightedWordGenerator(String name) {
         super(name);
@@ -19,20 +32,41 @@ public class WeightedWordGenerator extends AbstractRandomWordGenerator {
     public WeightedWordGenerator(String name, Random rng) {
         super(name, rng);
     }
-    
+
+    /** Add a word to this generator with the default weight (1).
+     * 
+     * @param word The word to add
+     */
     public synchronized void addWord(String word) {
         addWord(word, 1.0);
     }
     
+    /** Add a word to this generator, specifying the weight for this word.
+     * 
+     * @param word The word to add
+     * @param weight The weight for this word. It must be zero or positive.
+     *     Zero-weight words are allowed, though they will never be generated
+     *     by generateWord, so they're a little strange.
+     */
     public synchronized void addWord(String word, double weight) {
+        if (weight < 0.0) {
+            throw new IllegalArgumentException("Weights must be non-negative");
+        }
         items.add(new WeightedItem<String>(word, weight));
         setDirty();
     }
-    
+
+    /** Mark the word generator as 'dirty' - needing to recompile the weights
+     * on the items in the generator.
+     */
     protected void setDirty() {
         weightsCompiled.set(false);
     }
-    
+
+    /** Check if the weights are dirty (out of date). If they are, recompile
+     * them so that they can be used. That will also recompute the total
+     * weight in the generator.    
+     */
     protected void checkIfDirty() {
         if (!weightsCompiled.get()) {
             // Our weights need to be recompiled. Probably.
@@ -44,7 +78,7 @@ public class WeightedWordGenerator extends AbstractRandomWordGenerator {
                     for (WeightedItem<String> item: items) {
                         item.setCumulativeWeightLow(cumulativeWeight);
                         cumulativeWeight += item.getWeight();
-                        item.setCumulativeWeightHigh(cumulativeWeight);
+                        //item.setCumulativeWeightHigh(cumulativeWeight);
                     }
                     
                     totalWeight = cumulativeWeight;
@@ -56,6 +90,9 @@ public class WeightedWordGenerator extends AbstractRandomWordGenerator {
         }
     }
 
+    /** Generate a random word from our list.
+     * 
+     */
     @Override
     public String generateWord() {
         // Recompile weights if needed
@@ -68,19 +105,52 @@ public class WeightedWordGenerator extends AbstractRandomWordGenerator {
         
         double roll = rng.nextDouble() * totalWeight;
         
-        return(linearSearch(roll));        
+        return(binarySearch(roll));
     }
     
-    private String linearSearch(double roll) {
-        for (WeightedItem<String> item: items) {
-            if ((roll >= item.getCumulativeWeightLow()) &&
-                (roll <= item.getCumulativeWeightHigh())) {
-                return(item.getItem());
-            }
+    /** Find the word based on the random number "roll". This implements a binary search to quickly find
+     * the "right" word based on the roll.
+     * 
+     * @param roll A random number in the range 0 - {total weight of all items in the word generator}
+     * @return The corresponding string from our table of items. 
+     */
+    private String binarySearch(double roll) {
+        assert roll >= 0.0;
+        assert roll <= totalWeight;
+
+        // Start at the middle of the list. This may be nowhere near the middle
+        // of the frequency distribution, but that's OK, we'll still get to the
+        // right place.
+        int index = (items.size() / 2);
+        // The 'distance' is how far we will move (up or down) on the next search
+        // of the table.
+        int distance = index / 2;
+        if (distance < 1) {
+            distance = 1;
         }
         
-        // This should not happen!
-        throw new IllegalStateException("Roll " + roll + " is outside our recognized range of 0 - " + totalWeight);
+        while (true) {
+            // Is the current item the one we want? If so, we're done.
+            WeightedItem<String> item = items.get(index);
+            if ((roll >= item.getCumulativeWeightLow()) &&
+                (roll <= item.getCumulativeWeightHigh())) {
+                    return(item.getItem());
+            }
+            
+            // Nope, this isn't the one we want. If we're below the current item,
+            // move down. Otherwise move up.
+            if (roll < item.getCumulativeWeightLow()) {
+                index = index - distance;
+            } else {
+                index = index + distance;
+            }
+            // The distance we move on each probe gets cut in half each time - but
+            // never less than 1 space.
+            distance /= 2;
+            if (distance < 1) {
+                distance = 1;
+            }
+        }
     }
 
 }
