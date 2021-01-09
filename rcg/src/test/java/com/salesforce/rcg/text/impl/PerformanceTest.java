@@ -17,8 +17,18 @@ import com.salesforce.rcg.text.ExtensibleWordGenerator;
  *
  */
 public class PerformanceTest {
-    public static final double LONG_TEST_MS = 6_000.0;
+    /** Elapsed-time duration for the "long enough to be a good comparison point"
+     * test - wall clock time in milliseconds.
+     */
+    public static final double LONG_TEST_MS = 2_000.0;
+    
+    /** Number of words we'll seed each word generator with. */
     public static final int NUM_WORDS = 20_000;
+    
+    static final DecimalFormat df0 = new DecimalFormat("#,##0");
+    static final DecimalFormat df1 = new DecimalFormat("#,##0.0");
+    static final DecimalFormat dfp = new DecimalFormat("0.0%");
+
 
     /** Performance test: weighted generator vs. unweighted generator (why do I
      * feel like I'm writing the Computer Science version of "Shark vs Train"?)
@@ -53,9 +63,6 @@ public class PerformanceTest {
         double durationWeighted = durations.get("weighted");
         double durationUnweighted = durations.get("unweighted");
         
-        DecimalFormat df0 = new DecimalFormat("#,##0");
-        DecimalFormat df1 = new DecimalFormat("#,##0.0");
-        DecimalFormat dfp = new DecimalFormat("0.0%");
         
         System.out.println("*** Unweighted word generator performance test: " + df0.format(iterations) + " iterations:");
         System.out.println("    Weighted generator time:   " + df1.format(durationWeighted) + " ms.");
@@ -65,6 +72,22 @@ public class PerformanceTest {
         
     }
     
+    /** Run a single test. 
+     * This will go through all the word generators in the <tt>generators</tt>
+     * map. For each generator we will:
+     * <ol>
+     * <li>Initialize the generator with NUM_WORDS arbitrary words
+     * <li>Prime the generator by generating a single word from the word generator
+     * <li>Generate <tt>iterations</tt> words from the generator, timing how long this
+     *     step takes (in total).
+     * <li>Put an entry into the <tt>durations</tt> map with the generator name
+     *     and a Double value giving the execution time in milliseconds.
+     * </ol>
+     *  
+     * @param iterations
+     * @param generators
+     * @param durations
+     */
     private void runTest(long iterations, 
             Map<String, ExtensibleWordGenerator> generators,
             Map<String, Double> durations) {
@@ -98,6 +121,8 @@ public class PerformanceTest {
             }
             long end = System.nanoTime();
             
+            // Compute the duration in milliseconds, because that's what we look for
+            // in the "long test" comparison.
             double duration = (end - start) / 1_000_000.0;
             durations.put(type, duration);
         }
@@ -114,9 +139,10 @@ public class PerformanceTest {
             }
         }
         
-        System.out.println("For " + iterations + " iterations, the longest test took " 
-            + longestDuration + " ms.");
-        
+        System.out.println("Tried " + df0.format(iterations) 
+            + " iterations - the longest test took " 
+            + df1.format(longestDuration) + " ms.");
+
         if (longestDuration >= LONG_TEST_MS) {
             return(false);
         } else {

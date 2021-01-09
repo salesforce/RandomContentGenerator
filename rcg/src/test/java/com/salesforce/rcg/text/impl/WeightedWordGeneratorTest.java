@@ -2,7 +2,6 @@ package com.salesforce.rcg.text.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
 import java.util.Random;
@@ -144,7 +143,7 @@ public class WeightedWordGeneratorTest {
         WeightedWordGenerator generator = new WeightedWordGenerator("generated");
         CounterMap<String> expected = new CounterMap<>(); 
         
-        for (int i = 1; i < 100; ++i) {
+        for (int i = 0; i < 100; ++i) {
             String word = "word-" + i;
             generator.addWord(word, weight);
             expected.add(word, weight);

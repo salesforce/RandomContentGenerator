@@ -23,5 +23,7 @@ public interface WordGenerator {
     
     public WordGenerator setRng(Random rng);
     
+    public WordGeneratorType getType();
+    
     // TBD: what other metadata can word generators publish?
 }

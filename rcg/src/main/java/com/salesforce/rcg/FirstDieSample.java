@@ -1,7 +1,7 @@
 package com.salesforce.rcg;
 
-import com.salesforce.rcg.numbers.dice.DiceFactory;
 import com.salesforce.rcg.numbers.dice.DiceExpression;
+import com.salesforce.rcg.numbers.dice.DiceFactory;
 
 /**
  * A command-line sample that takes a dice expression as arguments,
@@ -15,6 +15,7 @@ public class FirstDieSample {
     public static String expression = "3d6";
     
     public static void main(String[] args) {
+        System.out.println("Die-roller sample program, using Random Content Generator version " + Constants.VERSION + ".");
         if (args.length > 0) {
             StringBuilder sb = new StringBuilder();
             for(String arg: args) {
@@ -23,9 +24,9 @@ public class FirstDieSample {
             }
             expression = sb.toString();
         }
+        System.out.println("Expression to parse: '" + expression + "'.");
         
-        DiceFactory factory = new DiceFactory();
-        
+        DiceFactory factory = new DiceFactory();        
         
         DiceExpression result = factory.create(expression);
 

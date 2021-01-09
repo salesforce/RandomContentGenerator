@@ -3,16 +3,19 @@ package com.salesforce.rcg.text.impl;
 /** A container for an item that has a weight. Actually, three weights:
  * - Its own weight
  * - Cumulative weights in some larger container, such as a WeightedWordGenerator.
- *   There are two cumulative weights - low and high
+ *   There are two cumulative weights - low and high. However, we don't have to
+ *   store all three of these. We can store two and compute the third by simple 
+ *   arithmetic.
+ *   
  * @author mpreslermarshall
  *
- * @param <V>
+ * @param <V> The type of "item" that this refers to.
  */
 public class WeightedItem<V> {
+    /** The item this contains. */
     protected V item;
     protected double myWeight;
     protected double cumulativeWeightLow;
-    // , cumulativeWeightHigh;
     
     public WeightedItem(V item) {
         this.item = item;
@@ -29,7 +32,6 @@ public class WeightedItem<V> {
             double cumulativeWeightHigh) {
         this(item, weight);
         this.cumulativeWeightLow = cumulativeWeightLow;
-        //this.cumulativeWeightHigh = cumulativeWeightHigh;
     }
     
     public V getItem() {
@@ -55,14 +57,7 @@ public class WeightedItem<V> {
     }
 
     public double getCumulativeWeightHigh() {
-        //return(cumulativeWeightHigh);
         return(myWeight + cumulativeWeightLow);
     }
     
-    /*
-    public WeightedItem<V> setCumulativeWeightHigh(double weight) {
-        cumulativeWeightHigh = weight;
-        return(this);
-    }
-     */
 }

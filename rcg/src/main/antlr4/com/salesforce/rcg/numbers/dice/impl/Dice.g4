@@ -2,11 +2,10 @@
 grammar Dice;
 
 @header {
-	
-//package com.salesforce.rcg.numbers.dice.impl;
 
-// Put import statements here as needed
-//import java.util.Map; 
+// No package declaration - the Antlr4 Maven plugin should deal with that.	
+
+// Put import statements here as needed...but at the moment none are needed.
 
 // End of @header
 }
@@ -116,5 +115,3 @@ fragment D : [dD] ;
 
 // Whitespace is ignored
 WS : [ \t\r\n]+ -> skip ; 
-
-

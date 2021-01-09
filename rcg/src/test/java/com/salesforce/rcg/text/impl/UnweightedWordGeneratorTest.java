@@ -33,7 +33,7 @@ public class UnweightedWordGeneratorTest {
             // Add the requested number of words to the generator, and also to the
             // expected frequency table.
             for (int i = 0; i < size; ++i) {
-                String word = "word-" + i;
+                String word = "size-" + size + "-word-" + i;
                 generator.addWord(word);
                 expected.add(word, 1);
             }

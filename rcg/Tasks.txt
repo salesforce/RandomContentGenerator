@@ -1,0 +1,34 @@
+List of tasks to do:
+
+- Get the version number from the POM file and use that in Constants.java, instead of hardcoding it
+  in Constants
+- Implement the word generator registry, using the JSON format I've defined.
+- Add a MANIFEST to the target JAR file, so that it runs com.salesforce.rcg.Demos
+- Create a shaded jar file that pulls in all the dependencies?
+- Create a shell script / Windows batch file that pulls in all the deps.
+
+My notes on word list files (the JSON files under 'data'):
+- JSON format is as good as anything, why
+  not use that.
+
+- The file should contain:
+  - File description
+  - Not sure what other file-level metadata
+  - A list of one or more generator definitions
+
+- Each generator definition contains:
+  * Name
+  * Weights - possible values are:
+    - defined-weights (weights for each word)
+    - unweighted
+    ? Not sure if I'll ever need:
+      - Zipf or other function-based weights
+  - Enabled? Defaults to true, this gives a 
+    way to include definitions in the file, but
+    "comment them out", since JSON sux and doesn't
+    contain comments.
+  - wordlist or word-filename
+    Source of the words. Must include one of these
+
+  Starred elements are required
+

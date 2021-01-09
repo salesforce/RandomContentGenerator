@@ -18,7 +18,7 @@ import com.salesforce.rcg.numbers.dice.testutils.ExpectedDiceResult;
 public class DiceFactoryTest {
     /**
      * Our table of test values. The syntax is:
-     * expression-to-parse "|" expected-values
+     * expression-to-parse "/" expected-values
      *   -  expression-to-parse is the exact string that'll be passed in to the
      *      <tt>create</tt> method on a <tt>DiceFactory</tt> instance.
      *   - expected-values is a string representing the values we expect to get.
@@ -53,6 +53,7 @@ public class DiceFactoryTest {
         "0/0,0,0,1d0",
         "5/5,5,5,1d0 + 5",
         "-3/-3,-3,-3,1d0 - 3",
+        "2*4/8,8,8,1d0 + 2 * 4",
         
         // Min-max ranges 
         "1-6/1,6,3.5,1d6",
@@ -62,6 +63,7 @@ public class DiceFactoryTest {
         "2-12/2,12,7," + DiceTestUtils.ANY_STRING_FORM,
         "0 - 9/0,9,4.5," + DiceTestUtils.ANY_STRING_FORM,
         "2-9/2,9,5.5," + DiceTestUtils.ANY_STRING_FORM,
+        "1-10*4/4,40,22,1d10 * 4",
         
         // A range where min=max should produce a constant expression
         "4-4/4,4,4," + DiceTestUtils.ANY_STRING_FORM,
@@ -69,11 +71,18 @@ public class DiceFactoryTest {
         // If the range values are swapped (max first), they should get
         // automatically un-swapped
         "8-1/1,8,4.5,1d8",
-       
         
         // Min-max ranges with negative numbers
         "-3 - 7/-3,7,2," + DiceTestUtils.ANY_STRING_FORM,
         "-4 - 4/-4,4,0," + DiceTestUtils.ANY_STRING_FORM,  
+        
+        // Leading and trailing whitespace are OK
+        " 2d12/2,24,13,2d12",
+        "6d6   /6,36,21,6d6",
+        
+        // The 'd' in FRP dice expressions is case-insensitive.
+        "1D5/1,5,3,1d5",
+        "D8/1,8,4.5,1d8",
     };
     
     /** Input string which will not parse correctly. Each of these should result in
@@ -96,7 +105,7 @@ public class DiceFactoryTest {
             
             DiceTestUtils.testRolls(expression, source, expected);
         }
-        System.out.println("Table-driven dice factory test ran " + GOOD_TEST_VALUES.length + " values.");
+        System.out.println("Table-driven dice factory test ran " + GOOD_TEST_VALUES.length + " values successfully.");
     }
 
 }
