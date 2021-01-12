@@ -12,7 +12,7 @@ import com.salesforce.rcg.numbers.dice.testutils.ExpectedDiceResult;
  * a representation of the expected values that should result from parsing each
  * string. See <tt>TEST_VALUES</tt> for more details on how this works. 
  * 
- * @author mpreslermarshall
+ * @author Martin Presler-Marshall
  *
  */
 public class DiceFactoryTest {
@@ -83,6 +83,12 @@ public class DiceFactoryTest {
         // The 'd' in FRP dice expressions is case-insensitive.
         "1D5/1,5,3,1d5",
         "D8/1,8,4.5,1d8",
+
+        // The "chance of generating a result" prefix
+        "chance: 25%, 1d8/0,8,1.125,1d8 with a 25% chance of generating a non-zero result",
+        "chance: 100%,2d3/2,6,4,2d3", // 100% chance is just the normal behavior
+        "chance: 150%,3d4/3,12,7.5,3d4", // More than a 100% chance is just a 100% chance
+        "chance: 0%,1d12/0,0,0,1d12 with a 0% chance of generating a non-zero result",
     };
     
     /** Input string which will not parse correctly. Each of these should result in
@@ -94,16 +100,25 @@ public class DiceFactoryTest {
      * value produces a DiceExpression that has the expected characteristics.
      */
     @Test
-    public void tableDrivenTest() {
+    public void tableDrivenTest() throws Exception {
         for (String testValue: GOOD_TEST_VALUES) {
+            if (testValue.indexOf('/') == -1) {
+                throw new IllegalArgumentException("Syntax error in test value '" 
+                        + testValue + "' - no '/' separating the input string from the expected values.");
+            }
             String components[] = testValue.split("/");
             String source = components[0];
-            ExpectedDiceResult expected = new ExpectedDiceResult(components[1]);
+            try {
+                ExpectedDiceResult expected = new ExpectedDiceResult(components[1]);
             
-            DiceFactory factory = new DiceFactory();
-            DiceExpression expression = factory.create(source);
+                DiceFactory factory = new DiceFactory();
+                DiceExpression expression = factory.create(source);
             
-            DiceTestUtils.testRolls(expression, source, expected);
+                DiceTestUtils.testRolls(expression, source, expected);
+            } catch (Throwable t) {
+                throw new Exception("Error while processing dice expression '" + source + "'.", t);
+            }
+                        
         }
         System.out.println("Table-driven dice factory test ran " + GOOD_TEST_VALUES.length + " values successfully.");
     }

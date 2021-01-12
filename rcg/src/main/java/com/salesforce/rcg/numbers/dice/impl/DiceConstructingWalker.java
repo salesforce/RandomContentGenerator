@@ -9,6 +9,7 @@ import com.salesforce.rcg.numbers.dice.DiceExpression;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.Add_or_subtractContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.BasicExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.ConstantExpressionContext;
+import com.salesforce.rcg.numbers.dice.impl.DiceParser.DicePrefixContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.ExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.FrpExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.MinMaxExpressionContext;
@@ -19,16 +20,43 @@ public class DiceConstructingWalker {
     }
     
     public DiceExpression process(ExpressionContext expressionTree) {
-        // Start at the top level and see what we have
+        SimpleDie result;
         
+        // Start at the top level and see what we have        
         if (expressionTree.basicExpression() != null) {
-            return(process(expressionTree.basicExpression()));
+            result = process(expressionTree.basicExpression());
         } else {
             throw new IllegalStateException("Don't know how to process this expression tree!");
         }
+        
+        if (expressionTree.dicePrefix() != null) {
+            result = processDicePrefix(result, expressionTree.dicePrefix());
+        }
+        
+        return result;
     }
     
-    protected DiceExpression process(BasicExpressionContext basicExpression) {
+    /** Process the dice prefix for a dice expression.
+     * 
+     * @param current The DiceExpression that came from processing the BasicExpressionContext.
+     * @param dicePrefixExpression The parsed context from parsing the dice prefix.
+     * @return A modified dice expression that includes the parsed prefix.
+     */
+    protected SimpleDie processDicePrefix(SimpleDie current, DicePrefixContext dicePrefixExpression) {
+        // OK, so what does the prefix call for?
+        
+        if (dicePrefixExpression.CHANCE() != null && dicePrefixExpression.PERCENT() != null) {
+            // This die has a specified chance of generating a result.
+            double chance = Double.parseDouble(dicePrefixExpression.INTEGER().getSymbol().getText()) / 100.0;            
+            current.setChance(chance);
+        } else {
+            throw new IllegalStateException("Can't figure out how to process the dice prefix!");
+        }
+        return current;
+        
+    }
+    
+    protected SimpleDie process(BasicExpressionContext basicExpression) {
         // A basic expression can be one of several forms, all
         // with an optional multiplier. So first figure out which form
         // we have and construct a Dice object for that. Then
@@ -54,7 +82,7 @@ public class DiceConstructingWalker {
     }
     
     protected SimpleDie processFrpExpression(FrpExpressionContext expression) {
-        List<TerminalNode> numberList = expression.NUMBER();
+        List<TerminalNode> numberList = expression.INTEGER();
 
         int numDice, sides;
         if (numberList.size() == 1) {
@@ -87,7 +115,7 @@ public class DiceConstructingWalker {
             return(0);
         }
         
-        int adder = Integer.parseInt(asContext.NUMBER().getSymbol().getText());
+        int adder = Integer.parseInt(asContext.INTEGER().getSymbol().getText());
         int sign = 1;
         if (asContext.MINUS() != null) {
             sign = -1;
@@ -96,7 +124,7 @@ public class DiceConstructingWalker {
     }
     
     protected SimpleDie processMinMaxExpression(MinMaxExpressionContext expression) {
-        List<TerminalNode> numberList = expression.NUMBER();
+        List<TerminalNode> numberList = expression.INTEGER();
         
         // The minimum and maximum values in the range the user requested.
         int min, max;
@@ -124,7 +152,7 @@ public class DiceConstructingWalker {
     
     protected SimpleDie processConstantExpression(ConstantExpressionContext expression) {
         // A constant expression is just a number - extract and parse it
-        int constantValue = Integer.parseInt(expression.NUMBER().getSymbol().getText());
+        int constantValue = Integer.parseInt(expression.INTEGER().getSymbol().getText());
         
         SimpleDie result = new SimpleDie();
         result.setAdder(constantValue);
@@ -141,7 +169,7 @@ public class DiceConstructingWalker {
         
         // This could be condensed to a chain of calls but I'm spelling it out
         // here for my own reference
-        TerminalNode multiplierNumberNode = multiplierContext.NUMBER();
+        TerminalNode multiplierNumberNode = multiplierContext.INTEGER();
         Token multiplierNumberSymbol = multiplierNumberNode.getSymbol();
         String multiplierText = multiplierNumberSymbol.getText();
         return(Integer.parseInt(multiplierText));
