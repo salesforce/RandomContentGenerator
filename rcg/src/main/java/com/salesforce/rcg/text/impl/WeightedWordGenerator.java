@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.salesforce.rcg.text.ExtensibleWordGenerator;
+import com.salesforce.rcg.text.WordGeneratorType;
 
 public class WeightedWordGenerator 
         extends AbstractRandomWordGenerator 
@@ -21,6 +22,14 @@ public class WeightedWordGenerator
     
     protected AtomicBoolean weightsCompiled = new AtomicBoolean(false);
     
+    // Statistics about the number of words generated and the number of
+    // searches done while trying to find the right word.
+    // Note that these counters are not threadsafe, so in any multithreaded
+    // use of this class, they will be wrong to some degree. Their purpose is
+    // for testing, and the tests that check these aren't multithreaded.
+    protected long numWordsGenerated = 0L;
+    protected long numProbes = 0L;
+    
     public WeightedWordGenerator() {
         super("anonymous");
     }
@@ -32,12 +41,20 @@ public class WeightedWordGenerator
     public WeightedWordGenerator(String name, Random rng) {
         super(name, rng);
     }
+    
+    public String toString() {
+        return "[WeightedWordGenerator name=" + name + ", compiled=" + weightsCompiled.get() + "]";
+    }
+    
+    public WordGeneratorType getType() {
+        return(WordGeneratorType.WEIGHTED);
+    }
 
     /** Add a word to this generator with the default weight (1).
      * 
      * @param word The word to add
      */
-    public synchronized void addWord(String word) {
+    public void addWord(String word) {
         addWord(word, 1.0);
     }
     
@@ -48,13 +65,23 @@ public class WeightedWordGenerator
      *     Zero-weight words are allowed, though they will never be generated
      *     by generateWord, so they're a little strange.
      */
-    public synchronized void addWord(String word, double weight) {
+    public void addWord(String word, double weight) {
         if (weight < 0.0) {
             throw new IllegalArgumentException("Weights must be non-negative");
         }
-        items.add(new WeightedItem<String>(word, weight));
+        addItem(new WeightedItem<String>(word, weight));
+    }
+    
+    /** The actual implementation of adding an item to a word generator.
+     * 
+     * @param item The WeightedItem containing the string to add
+     *     and its weight.
+     */
+    private synchronized void addItem(WeightedItem<String> item) {
+        items.add(item);
         setDirty();
     }
+    
 
     /** Mark the word generator as 'dirty' - needing to recompile the weights
      * on the items in the generator.
@@ -95,6 +122,8 @@ public class WeightedWordGenerator
      */
     @Override
     public String generateWord() {
+        ++numWordsGenerated;
+        
         // Recompile weights if needed
         checkIfDirty();
         
@@ -130,6 +159,7 @@ public class WeightedWordGenerator
         }
         
         while (true) {
+            ++numProbes;
             // Is the current item the one we want? If so, we're done.
             WeightedItem<String> item = items.get(index);
             if ((roll >= item.getCumulativeWeightLow()) &&
@@ -151,6 +181,18 @@ public class WeightedWordGenerator
                 distance = 1;
             }
         }
+    }
+    
+    long getNumWordsGenerated() {
+        return numWordsGenerated;
+    }
+    
+    long getNumProbes() {
+        return numProbes;
+    }
+    
+    int getNumWords() {
+        return items.size();
     }
 
 }

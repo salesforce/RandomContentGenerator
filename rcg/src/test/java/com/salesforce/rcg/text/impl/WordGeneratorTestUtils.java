@@ -4,18 +4,19 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
-import org.junit.Test;
-
+import com.salesforce.rcg.text.TextCasing;
 import com.salesforce.rcg.text.WordGenerator;
+import com.salesforce.rcg.text.WordGeneratorType;
 import com.salesforce.rcg.util.CounterMap;
+import com.salesforce.rcg.util.Pair;
 
 public class WordGeneratorTestUtils {
-    protected static final int ITERATION_MULTIPLIER = 5000;
-
+    protected static final int ITERATION_MULTIPLIER = 10_000;
 
     /** Run a test on a weighted word generator, verifying that the actual 
      * distribution of words generated is close to what the expected distribution
@@ -32,10 +33,13 @@ public class WordGeneratorTestUtils {
      *     Don't go crazy here: we will generate (ITERATION_MULTIPLIER * total_weight)
      *     words, so very heavily skewed distributions may not end up generating all 
      *     the possible words from the generator, causing intermittent failures. 
-     *     Bad idea. 
+     *     Bad idea. If you find that a given test is producing intermittent failures,
+     *     try multiplying all the weights by some constant value (like 2 or 4) to increase
+     *     the total number of iterations.
      */
     public static void testWeightedGenerator(WordGenerator generator,
             CounterMap<String> expectedWeights) {
+        //System.out.println("Testing word generator " + generator + ".");
         CounterMap<String> actuals = new CounterMap<>();
         
         int numIterations = (ITERATION_MULTIPLIER * expectedWeights.getTotal());
@@ -44,7 +48,7 @@ public class WordGeneratorTestUtils {
         for (int i = 0; i < numIterations; ++i) {
             String word = generator.generateWord();
             actuals.add(word);
-        }        
+        }
         
         // The total list of words generated should equal the list of
         // words expected.
@@ -63,20 +67,114 @@ public class WordGeneratorTestUtils {
             
             assertEquals("Weight for word '" + expectedWord + "'", expectedRelativeWeight, actualRelativeWeight, 0.01);            
         }
+        
+        if (generator instanceof WeightedWordGenerator) {
+            WeightedWordGenerator wwg = (WeightedWordGenerator) generator;
+            double probesPerWord = ((double) wwg.getNumProbes() / (double) wwg.getNumWordsGenerated());
+            DecimalFormat df2 = new DecimalFormat("0.00");
+            DecimalFormat df0 = new DecimalFormat("#,##0");
+            System.out.println("Tested word generator " + generator.getName() 
+                + ", containing " + wwg.getNumWords() + " words"
+                + ", generating " + df0.format(wwg.getNumWordsGenerated()) + " words"
+                + ", using " + df0.format(wwg.getNumProbes()) + " probes to do it"
+                + " (average=" + df2.format(probesPerWord) + ")");
+        }        
+    }
+    
+    public static void testWeightedGenerator(WordGenerator generator,
+            TextCasing casing,
+            boolean trim,
+            List<Pair<String, Double>> values) {
+        // Verify the basics
+        assertNotNull(generator);
+        assertEquals(WordGeneratorType.WEIGHTED, generator.getType());
+        
+        // Build a CounterMap based on the supplied list of values, and the specified
+        // text casing / trimming
+        CounterMap<String> expectedWeights = new CounterMap<>();
+        DecimalFormat df = new DecimalFormat("#,##0");
+        for (Pair<String, Double> value: values) {
+            String word = value.getFirst();
+            double weight = value.getSecond();
+            
+            // Trim the words if appropriate
+            if (trim) {
+                word = word.trim();
+            }
+            
+            // Apply the text casing
+            word = casing.apply(word);
+            
+            // Add to the CounterMap
+            int finalWeight = (int) Math.round(weight);
+            expectedWeights.add(word, finalWeight);
+            System.out.println("    " + word + " --> " + df.format(finalWeight));
+        }
+        
+        // Now that we have a map of the expected values and weights, use the weighted-generator
+        // tester to verify this.
+        testWeightedGenerator(generator, expectedWeights);
+    }
+    
+    /** A convenience routine for testing unweighted word generators.
+     * 
+     * @param generator
+     * @param casing
+     * @param trim
+     * @param values
+     */
+    public static void testUnweightedGenerator(WordGenerator generator,
+    		TextCasing casing,
+    		boolean trim,
+    		String... values) {
+    	// Verify the basics
+        assertNotNull(generator);
+        assertEquals(WordGeneratorType.UNWEIGHTED, generator.getType());
+        
+        // Build a CounterMap based on the supplied list of values, and the specified
+        // text casing / trimming
+        CounterMap<String> expectedWeights = new CounterMap<>();
+        for (String value: values) {
+        	// Trim the words if appropriate
+        	if (trim) {
+        		value = value.trim();
+        	}
+        	
+        	// Apply the text casing
+        	value = casing.apply(value);
+        	
+        	// Add to the CounterMap
+        	expectedWeights.add(value, 1);
+        	System.out.println("    " + value + " --> 1");
+        }
+        
+        // Now that we have a map of the expected values and weights, use the weighted-generator
+        // tester to verify this.
+        testWeightedGenerator(generator, expectedWeights);
+
     }
 
+    /** Verify that a given word generator is empty - that is, that it has no
+     * words loaded in it.
+     * 
+     * @param testMe The word generator to test
+     * @param expectedName The word generator's name
+     */
     public static void testEmpty(WordGenerator testMe, String expectedName) {
         assertEquals(expectedName, testMe.getName());
         assertNull(testMe.generateWord());
     }
-    
+
+    /** Test setting the random number generator on a word generator.
+     * 
+     * @param testMe
+     */
     public static void testSetRng(WordGenerator testMe) {
         assertNotNull(testMe.getRng());
         
         Random r = new Random();
         testMe.setRng(r);
         assertEquals(r, testMe.getRng());
-        
     }
 
 }

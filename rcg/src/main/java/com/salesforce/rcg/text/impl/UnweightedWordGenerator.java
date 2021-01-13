@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import com.salesforce.rcg.text.ExtensibleWordGenerator;
+import com.salesforce.rcg.text.WordGeneratorType;
 
 public class UnweightedWordGenerator 
         extends AbstractRandomWordGenerator 
@@ -23,13 +24,29 @@ public class UnweightedWordGenerator
     public UnweightedWordGenerator(String name, Random rng) {
         super(name, rng);
     }
+    
+    public String toString() {
+        return "UnweightedWordGenerator '" + name + "'";
+    }
+    
+    public WordGeneratorType getType() {
+        return(WordGeneratorType.UNWEIGHTED);
+    }
 
-    /** Add a word to this generator with the default weight (1).
+    /** Add a word to this generator.
      * 
      * @param word The word to add
      */
     public synchronized void addWord(String word) {
         items.add(word);
+    }
+    
+    /** Add a word to this generator. The specified weight will be ignored, as
+     * this generator doesn't understand the concept of weights associated with 
+     * the items.
+     */
+    public void addWord(String word, double weight) {
+        addWord(word);
     }
     
     /** Generate a random word from our list.

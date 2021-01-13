@@ -1,5 +1,6 @@
 package com.salesforce.rcg.numbers.dice.impl;
 
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import com.salesforce.rcg.numbers.dice.DiceExpression;
@@ -9,6 +10,8 @@ public class SimpleDie implements DiceExpression {
     protected int sides;
     protected int adder; 
     protected int multiplier = 1;
+    protected double chance = 1.0;
+    protected DecimalFormat df = null;
     /* package-private */ Random rng;
     
     public SimpleDie(int sides) {
@@ -48,6 +51,12 @@ public class SimpleDie implements DiceExpression {
 
     @Override
     public int roll() {
+        if (chance < 1.0) {
+            double rolledChance = rng.nextDouble();
+            if (rolledChance >= chance) {
+                return 0;
+            }
+        }
         int sum = adder;
         if (sides != 0) {
             for (int i = 0; i < numDice; ++i) {
@@ -58,7 +67,7 @@ public class SimpleDie implements DiceExpression {
     }
     
     @Override
-    public String toString() {
+    public synchronized String toString() {
         StringBuilder result = new StringBuilder();
         result.append(numDice);
         result.append("d");
@@ -74,6 +83,13 @@ public class SimpleDie implements DiceExpression {
         if (multiplier != 1) {
             result.append(" * ");
             result.append(multiplier);
+        }
+        
+        if (chance < 1.0) {
+            if (df == null) {
+                df = new DecimalFormat("0%");
+            }
+            result.append(" with a " + df.format(chance) + " chance of generating a non-zero result");
         }
         
         return result.toString();
@@ -164,5 +180,14 @@ public class SimpleDie implements DiceExpression {
         // adder will cover every possible range.
         throw new IllegalStateException("Can't find a die combination that works for the range " + min + "-" + max + "!");
     }
+
+    public double getChance() {
+        return chance;
+    }
+
+    public void setChance(double chance) {
+        this.chance = chance;
+    }
+
 
 }

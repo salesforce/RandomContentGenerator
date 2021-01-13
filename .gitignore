@@ -15,5 +15,11 @@
 
 # Settings
 /rcg/.settings/
+
+# Don't store generated files in git
 /rcg/target/
+
+# Don't add the public data to the repository at this time
+/rcg/PublicData/
+
 

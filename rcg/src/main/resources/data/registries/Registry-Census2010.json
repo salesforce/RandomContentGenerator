@@ -1,0 +1,38 @@
+{
+    "description": "An example JSON file used to represent one or more word generators",
+    "generators": [
+        {
+            "name": "roadnames",
+            "enabled": "true",
+            "generator-type": "defined-weights",
+            "wordlist": [
+                {"avenue": 60},
+                {"boulevard": 10},
+                {"court": 10},
+                {"drive": 80},
+                {"road": 75},
+                {"route": 5},
+                {"street": 100},
+                {"terrace": 5},
+                {"trail": 8},
+                {"way": 4}
+            ]
+        },
+        {
+            "name": "firstnames",
+            "generator-type": "weighted",
+            "filename": "PublicData/yob2010.txt",
+            "file-processing-mode": "us-census-first",
+            "casing": "capitalize-first"
+
+        },
+        { 
+            "name": "lastnames",
+            "generator-type": "weighted",
+            "filename": "PublicData/Names_2010Census.csv",
+            "file-processing-mode": "us-census-last",
+            "casing": "capitalize-first"
+         }
+    ]
+}
+
