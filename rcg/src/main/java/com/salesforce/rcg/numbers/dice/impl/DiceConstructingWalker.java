@@ -1,5 +1,6 @@
 package com.salesforce.rcg.numbers.dice.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.antlr.v4.runtime.Token;
@@ -14,12 +15,35 @@ import com.salesforce.rcg.numbers.dice.impl.DiceParser.ExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.FrpExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.MinMaxExpressionContext;
 import com.salesforce.rcg.numbers.dice.impl.DiceParser.MultiplierContext;
+import com.salesforce.rcg.numbers.dice.impl.DiceParser.SingleDieContext;
 
 public class DiceConstructingWalker {
     public DiceConstructingWalker() {
     }
     
     public DiceExpression process(ExpressionContext expressionTree) {
+        DiceExpression result;
+        
+        // Start at the top level and see what we have        
+        if (expressionTree.singleDie() != null) {
+            List<SingleDieContext> diceContexts = expressionTree.singleDie();
+            
+            if (diceContexts.size() == 1) {
+                result = processSingleDie(diceContexts.get(0));
+            } else {
+                List<SimpleDie> dice = new ArrayList<>(diceContexts.size());
+                for (SingleDieContext dieContext: diceContexts) {
+                    dice.add(processSingleDie(dieContext));
+                }
+                result = new CompositeDie(dice);
+            }
+        } else {
+            throw new IllegalStateException("Don't know how to process this expression tree!");
+        }
+        return result;
+    }
+
+    public SimpleDie processSingleDie(SingleDieContext expressionTree) {
         SimpleDie result;
         
         // Start at the top level and see what we have        
@@ -35,7 +59,7 @@ public class DiceConstructingWalker {
         
         return result;
     }
-    
+
     /** Process the dice prefix for a dice expression.
      * 
      * @param current The DiceExpression that came from processing the BasicExpressionContext.

@@ -21,5 +21,5 @@ public interface DiceExpression {
      * 
      * @return the number of sides in this simulated die.
      */
-    public int getNumSides();
+    //public int getNumSides();
 }

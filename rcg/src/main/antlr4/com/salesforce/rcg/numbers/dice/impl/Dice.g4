@@ -21,8 +21,13 @@ grammar Dice;
 // to parse the entire input. Now I get errors output to the console when
 // there is extraneous input, but I don't know how to turn those into
 // runtime exceptions.
-expression 
-    : dicePrefix? basicExpression EOF
+expression
+    : singleDie (AND singleDie)* EOF
+    //| singleDie AND expression 
+    ;
+
+singleDie 
+    : dicePrefix? basicExpression 
     ;
 
 dicePrefix
@@ -95,8 +100,11 @@ constantExpression: INTEGER ;
 
 // Keywords
 CHANCE: ('c' | 'C') ('h' | 'H') ('a' | 'A') ('n' | 'N') ('c' | 'C') ('e' | 'E') ;
-
-
+AND
+    : ('a' | 'A') ('n' | 'N') ('d' | 'D') 
+    | '&'
+    ;
+    
 //
 // Lexical analysis
 PLUS : '+' ;

@@ -189,4 +189,5 @@ public class SimpleDie implements DiceExpression {
         this.chance = chance;
     }
 
+
 }

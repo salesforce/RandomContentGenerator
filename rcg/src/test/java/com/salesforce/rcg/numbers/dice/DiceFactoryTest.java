@@ -89,6 +89,17 @@ public class DiceFactoryTest {
         "chance: 100%,2d3/2,6,4,2d3", // 100% chance is just the normal behavior
         "chance: 150%,3d4/3,12,7.5,3d4", // More than a 100% chance is just a 100% chance
         "chance: 0%,1d12/0,0,0,1d12 with a 0% chance of generating a non-zero result",
+        
+        // Composite dice
+        "1d6 & 1d8/2,14,8.0,1d6 and 1d8",
+        "2d4 and 1d12/3,20,11.5,2d4 and 1d12",
+        "6d6+1 AND 1d3/8,40,24.0,6d6 + 1 and 1d3",
+        // More than two dice is OK.
+        "1d4 & 1d6 and 1d8/3,18,10.5,1d4 and 1d6 and 1d8",
+        
+        // Composite dice can use prefixes as well
+        "chance: 25%, 1d8 & 1d10/1,18,6.625,1d8 with a 25% chance of generating a non-zero result and 1d10",
+        "chance:100%, 2d9 & chance:75%, 3d7/2,39,19.0,2d9 and 3d7 with a 75% chance of generating a non-zero result",
     };
     
     /** Input string which will not parse correctly. Each of these should result in
